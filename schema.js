@@ -1,4 +1,4 @@
-var asyn = require('async')
+var async = require('async')
 
 var commentSchema = function(table){
         table.increments()
@@ -9,15 +9,15 @@ var commentSchema = function(table){
         table.integer('down_vote').default(0).index()
         table.float('rank').default(0.0).index()
         table.integer('created').default(0)
-        table.text('comment')
+        table.text('comment').default("")
 }
 
 var userVoteSchema = function(table){
         table.integer('user'),
         table.integer('post'),
         table.boolean('up_vote').default(false)
+        table.primary(['user', 'post'])
 }
-
 
 module.exports = function(commentTableName,
                           userVoteTableName,
@@ -29,7 +29,7 @@ module.exports = function(commentTableName,
             {tableName: userVoteTableName, schema: userVoteSchema}
         ]
 
-        asyn.eachSeries(tableData, function(tableInfo, callback){
+        async.eachSeries(tableData, function(tableInfo, callback){
             knex.schema.hasTable(tableInfo.tableName)
                 .then(function(exists) {
                     if( !exists ){

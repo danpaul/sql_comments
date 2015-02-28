@@ -9,7 +9,6 @@ var config = require('./config')
 var async = require('async')
 
 var SqlComment = require('../index')
-var sqlComment;
 
 var dbCreds = {
     client: 'mysql',
@@ -30,6 +29,9 @@ var knex = require('knex')(dbCreds)
 
 *******************************************************************************/
 
+var userId = 1
+var postId = 1
+
 async.waterfall([
 
 	function(callback){
@@ -37,11 +39,16 @@ async.waterfall([
 									callback)
 	},
 
-	function(sqlCommentIn, callback){
-		sqlComment = sqlCommentIn;
-console.log('foo')
-	}
+    // add commeent
+	function(callback){
 
+// console.log(sqlComment.test)
+        sqlComment.add(userId, postId, 0, 'This is a comment', callback)
+	},
+
+    function(callback){
+        callback()
+    }
 
 ],
 function(err){})
