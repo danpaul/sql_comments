@@ -1,0 +1,26 @@
+{
+  "name": "sql_comment",
+  "version": "0.0.0",
+  "description": "SQL backed node comments with nesting and ranking",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danpaul/sql_comments.git"
+  },
+  "author": "Dan Breczinski <pt2323@gmail.com> (https://github.com/danpaul)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danpaul/sql_comments/issues"
+  },
+  "homepage": "https://github.com/danpaul/sql_comments",
+  "dependencies": {
+    "async": "^0.9.0"
+  },
+  "devDependencies": {
+    "knex": "^0.7.4",
+    "mysql": "^2.5.5"
+  }
+}
