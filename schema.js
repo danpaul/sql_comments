@@ -16,9 +16,9 @@ var commentSchema = function(table){
 
 var userVoteSchema = function(table){
         table.integer('user'),
-        table.integer('post'),
+        table.integer('comment'),
         table.boolean('up_vote').default(false)
-        table.primary(['user', 'post'])
+        table.primary(['user', 'comment'])
 }
 
 module.exports = function(commentTableName,

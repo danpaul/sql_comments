@@ -92,9 +92,28 @@ async.waterfall([
         callback()
     },
 
-    
+    // delete first comment
+    function(callback){
+        var commentId = topComments[0]['id']
+        sqlComment.delete(commentId, callback)
+    },
 
+    // get comments
+    function(callback){
+        sqlComment.get(postId, false, callback)
+    },
 
+    // confirm delete
+    function(comments, callback){
+        assert((comments.length === settings.numberOfTopComments - 1),
+               'Incorrect number of comments after delete')
+        callback()
+    },
+
+    // cast upvote for post 2
+    function(callback){
+        sqlComment.vote(userId, topComments[1]['id'], true, callback)
+    }
 
 ],
 function(err){
