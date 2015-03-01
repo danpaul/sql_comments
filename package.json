@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/danpaul/sql_comments",
   "dependencies": {
-    "async": "^0.9.0"
+    "async": "^0.9.0",
+    "underscore": "^1.8.2"
   },
   "devDependencies": {
     "knex": "^0.7.4",
