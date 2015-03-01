@@ -1,0 +1,9 @@
+
+- get formatted comments
+
+- flag comments
+
+- add flag log
+    + user id
+    + comment id
+    + flagged

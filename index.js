@@ -83,7 +83,7 @@ module.exports = function(options, callback){
     * Returns all comments for a post
     * `includeDeleted` if set to true will include deleted posts
     */
-    this.get = function(postId, includeDeleted, callbackIn){
+    this.getComments = function(postId, includeDeleted, callbackIn){
 
         var query = self.knex(commentTable)
             .where({ post: postId })
@@ -94,6 +94,22 @@ module.exports = function(options, callback){
 
         query.then(function(rows){ callbackIn(null, rows)})
             .catch(callbackIn)
+    }
+
+    /**
+    * Gets all details of individual commaent
+    * Passes back `null` if comment is not found
+    */
+    this.getComment = function(commentId, callbackIn){
+        self.knex(commentTable)
+            .where('id', commentId)
+            .then(function(rows){
+                if( rows.length === 0 ){
+                    callbackIn(null, null)
+                } else {
+                    callbackIn(null, rows[0])
+                }
+            })
     }
 
     /**

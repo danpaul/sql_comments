@@ -59,6 +59,8 @@ var clearTable = function(table, callbackIn){
 var userId = 1
 var postId = 1
 var topComments;
+var nestedComment1;
+var nestedComment2;
 
 async.waterfall([
 
@@ -80,7 +82,7 @@ async.waterfall([
 
     // get comments
     function(callback){
-        sqlComment.get(postId, false, callback)
+        sqlComment.getComments(postId, false, callback)
     },
 
     function(comments, callback){
@@ -100,7 +102,7 @@ async.waterfall([
 
     // get comments
     function(callback){
-        sqlComment.get(postId, false, callback)
+        sqlComment.getComments(postId, false, callback)
     },
 
     // confirm delete
@@ -113,6 +115,81 @@ async.waterfall([
     // cast upvote for post 2
     function(callback){
         sqlComment.vote(userId, topComments[1]['id'], true, callback)
+    },
+
+    // refresh comments
+    function(callback){
+        sqlComment.getComments(postId, true, callback)
+    },
+
+    // confirm vote was registered
+    function(comments, callback){
+        topComments = comments
+        assert((topComments[1]['up_vote'] === 1), 'Upvote not registered')
+        assert((topComments[1]['down_vote'] === 0),
+               'Downvote incorrectly registered')
+        callback()
+    },
+
+    // try to vote again for same post
+    function(callback){
+        sqlComment.vote(userId, topComments[1]['id'], true, callback)
+    },
+
+    function(callback){
+        sqlComment.getComment(topComments[1]['id'], callback)
+    },
+
+    function(comment, callback){
+        assert((comment['up_vote'] === 1 && comment['down_vote'] === 0),
+               'Second vote registered incorrectly')
+        callback()
+    },
+
+    // add nested comment to comment 2
+    function(callback){
+        sqlComment.add(userId,
+                       postId,
+                       topComments[1]['id'],
+                       'This is a nested comment',
+                       callback)
+    },
+
+    // refresh comments
+    function(callback){
+        sqlComment.getComments(postId, true, callback)
+    },
+
+    // confirm vote was registered
+    function(comments, callback){
+        topComments = comments
+        nestedComment1 = topComments[10]
+        assert((nestedComment1['comment'] ===
+               'This is a nested comment'),
+                'Nested comment content not correct')
+        assert((nestedComment1['parent'] === topComments[1]['id']),
+               'Nested comment parent not correct')
+        callback()
+    },
+
+    // add nested comment to nested comment
+    function(callback){
+        sqlComment.add(userId,
+                       postId,
+                       nestedComment1['id'],
+                       'This is a nested comment',
+                       callback)
+    },
+
+    // refresh comments
+    function(callback){
+        sqlComment.getComments(postId, true, callback)
+    },
+
+    function(comments, callback){
+        topComments = comments
+        nestedComment2 = topComments[11]
+        callback()
     }
 
 ],
