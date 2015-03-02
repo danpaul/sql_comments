@@ -1,10 +1,7 @@
 var async = require('async')
 var decay = require('decay')
 
-
 var baseModel = require('./base')
-
-var DEAFULT_Z_SCORE = 1
 
 /**
 * options should include:
