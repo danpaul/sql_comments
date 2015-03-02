@@ -1,6 +1,8 @@
 var async = require('async')
 var decay = require('decay')
 
+var models = require('./models/index')
+
 var DEFAULT_TABLE_PREFIX = 'sql_comment_'
 var DEAFULT_Z_SCORE = 1
 
@@ -15,7 +17,10 @@ module.exports = function(options, callback){
 
     var commentTable
     var voteTable
+    var flaggedUserTable
     var wilsonScore
+
+    var commentModel;
 
 /*******************************************************************************
 
@@ -40,9 +45,22 @@ module.exports = function(options, callback){
 
         commentTable = prefix + 'comment'
         voteTable = prefix + 'vote'
+        flaggedUserTable = prefix + 'flaggedUser'
+
+        commentModel = new models.comment({knex: options.knex,
+                                           tableName: commentTable})
+
+        self.add = commentModel.add
+        self.delete = commentModel.delete
+        self.getComments = commentModel.getComments
 
         // init tables
-        require('./schema')(commentTable, voteTable, self.knex, callback)
+        require('./schema')(commentTable,
+                            voteTable,
+                            flaggedUserTable,
+                            self.knex,
+                            callback)
+
     }
 
 /*******************************************************************************
@@ -51,50 +69,7 @@ module.exports = function(options, callback){
     
 *******************************************************************************/
 
-    /**
-    * All Id fields should be integers
-    * Pass 0 as parent if it is top level
-    */
-    this.add = function(userId, postId, parentId, comment, callbackIn){
-        self.knex(commentTable)
-            .insert({
-                user: userId,
-                post: postId,
-                parent: parentId,
-                comment: comment,
-                created: self.getCurrentTimestamp()
-            })
-            .then(function(){callbackIn()})
-            .catch(callbackIn)
-    }
 
-    /**
-    * Sets `is_deleted` to `true` for comment
-    */
-    this.delete = function(commenId, callbackIn){
-        self.knex(commentTable)
-            .where({id: commenId})
-            .update({is_deleted: true})
-            .then(function(){ callbackIn() })
-            .catch(callbackIn)
-    }
-
-    /**
-    * Returns all comments for a post
-    * `includeDeleted` if set to true will include deleted posts
-    */
-    this.getComments = function(postId, includeDeleted, callbackIn){
-
-        var query = self.knex(commentTable)
-            .where({ post: postId })
-
-        if( !includeDeleted ){
-            query.andWhere({is_deleted: false})
-        }
-
-        query.then(function(rows){ callbackIn(null, rows)})
-            .catch(callbackIn)
-    }
 
     /**
     * Gets all details of individual commaent
@@ -180,17 +155,6 @@ module.exports = function(options, callback){
             })
             .catch(callbackIn)
 
-    }
-
-
-/*******************************************************************************
-
-                    HELPER FUNCTIONS
-    
-*******************************************************************************/
-
-    this.getCurrentTimestamp = function(){
-        return Math.floor(Date.now() / 1000)
     }
 
 

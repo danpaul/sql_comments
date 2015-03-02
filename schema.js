@@ -21,14 +21,31 @@ var userVoteSchema = function(table){
         table.primary(['user', 'comment'])
 }
 
+var flaggedUserLogSchema = function(table){
+        table.increments()
+        table.integer('user').default(0).index(),
+        table.integer('created').default(0).index(),
+        table.integer('comment').default(0)
+}
+
+var userBan = function(table){
+    table.increments()
+    table.integer('user').default(0).index()
+    table.integer('created').default(0)
+    table.boolean('is_banned').default(true).index()
+    table.boolean('is_permanently_banned').default(false)
+}
+
 module.exports = function(commentTableName,
                           userVoteTableName,
+                          flaggedUserLogTableName,
                           knex,
                           callbackIn){
 
         var tableData = [
             {tableName: commentTableName, schema: commentSchema},
-            {tableName: userVoteTableName, schema: userVoteSchema}
+            {tableName: userVoteTableName, schema: userVoteSchema},
+            {tableName: flaggedUserLogTableName, schema: flaggedUserLogSchema}
         ]
 
         async.eachSeries(tableData, function(tableInfo, callback){
