@@ -1,12 +1,10 @@
 var async = require('async')
-// var decay = require('decay')
+var decay = require('decay')
 
 
 var baseModel = require('./base')
-// var models = require('./models/index')
 
-// var DEFAULT_TABLE_PREFIX = 'sql_comment_'
-// var DEAFULT_Z_SCORE = 1
+var DEAFULT_Z_SCORE = 1
 
 /**
 * options should include:
@@ -15,10 +13,6 @@ var baseModel = require('./base')
 */
 module.exports = function(options, callback){
     var self = this
-
-    var knex
-
-    var tableName
 
 /*******************************************************************************
 
@@ -30,7 +24,7 @@ module.exports = function(options, callback){
 
         self.knex = options.knex
         self.tableName = options.tableName
-
+        self.wilsonScore = decay.wilsonScore(options.zScore)
     }
 
 /*******************************************************************************
@@ -68,6 +62,22 @@ module.exports = function(options, callback){
     }
 
     /**
+    * Gets all details of individual commaent
+    * Passes back `null` if comment is not found
+    */
+    this.getComment = function(commentId, callbackIn){
+        self.knex(self.tableName)
+            .where('id', commentId)
+            .then(function(rows){
+                if( rows.length === 0 ){
+                    callbackIn(null, null)
+                } else {
+                    callbackIn(null, rows[0])
+                }
+            })
+    }
+
+    /**
     * Returns all comments for a post
     * `includeDeleted` if set to true will include deleted posts
     */
@@ -82,6 +92,48 @@ module.exports = function(options, callback){
 
         query.then(function(rows){ callbackIn(null, rows)})
             .catch(callbackIn)
+    }
+
+    /**
+    * Updates comment vote
+    * Todo: write query to perform all operations in one step
+    */
+    this.updateVote = function(commentId, isUpvote, callbackIn){
+
+        async.waterfall([
+
+            function(callback){
+
+                var voteColumn = isUpvote ? 'up_vote' : 'down_vote'
+
+                self.knex(self.tableName)
+                    .where('id', commentId)
+                    .increment(voteColumn, 1)
+                    .then(function(){ callback() })
+                    .catch(callback)
+            },
+
+            // fetch row
+            function(callback){
+                self.knex(self.tableName)
+                    .select(['up_vote', 'down_vote'])
+                    .where('id', commentId)
+                    .then(function(rows){ callback(null, rows[0]) })
+                    .catch(callback)
+            },
+
+            // update score
+            function(comment, callback){
+                var rank = self.wilsonScore(comment['up_vote'],
+                                            comment['down_vote'])
+                self.knex(self.tableName)
+                    .where('id', commentId)
+                    .update({rank: rank})
+                    .then(function(){ callback() })
+                    .catch(callback)
+            },
+        ], callbackIn)
+
     }
 
     this.init()

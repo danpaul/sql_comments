@@ -1,3 +1,4 @@
 module.exports = {
-    comment: require('./comment')
+    comment: require('./comment'),
+    vote: require('./vote')
 }
