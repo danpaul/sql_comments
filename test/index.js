@@ -65,7 +65,9 @@ var nestedComment2;
 async.waterfall([
 
     function(callback){
-        sqlComment = new SqlComment({knex: knex}, callback)
+        sqlComment = new SqlComment({knex: knex},
+                                    {minimumFlagsToBan: 1},
+                                    callback)
     },
 
     clearTables,
