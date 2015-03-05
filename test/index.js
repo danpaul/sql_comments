@@ -168,6 +168,7 @@ async.waterfall([
 
     // confirm vote was registered
     function(comments, callback){
+
         topComments = comments
         nestedComment1 = topComments[10]
         assert((nestedComment1['comment'] ===
@@ -196,6 +197,11 @@ async.waterfall([
         topComments = comments
         nestedComment2 = topComments[11]
         callback()
+    },
+
+    // flag comment 3
+    function(callback){
+        sqlComment.flag(topComments[2], userId, callback)
     }
 
 ],

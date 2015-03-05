@@ -63,22 +63,52 @@ module.exports = function(options, settings, callback){
         })
 
         // init models
-        commentModel = new models.comment({knex: options.knex,
-                                           tableName: tableNames['comment'],
-                                           zScore: zScore})
+        self.commentModel = new models.comment({knex: options.knex,
+                                                tableName: tableNames['comment'],
+                                                zScore: zScore})
 
-        voteModel = new models.vote({knex: options.knex,
-                                    tableName: tableNames['userVote'],
-                                    commentModel: commentModel})
+        self.voteModel = new models.vote({knex: options.knex,
+                                         tableName: tableNames['userVote'],
+                                         commentModel: self.commentModel})
 
-        self.add = commentModel.add
-        self.delete = commentModel.delete
-        self.getComment = commentModel.getComment
-        self.getComments = commentModel.getComments
+        self.userFlagBanModel =
+             new models.userFlagBan({knex: options.knex,
+                                    tableName: tableNames['userFlagBan'],
+                                    maximumFlagRate: settings.maximumFlagRate,
+                                    flagPeriod: settings.flagPeriod})
 
-        self.vote = voteModel.vote
+
+        self.add = self.commentModel.add
+        self.delete = self.commentModel.delete
+        self.getComment = self.commentModel.getComment
+        self.getComments = self.commentModel.getComments
+
+        self.vote = self.voteModel.vote
 
         schema.init(prefix, self.knex, callback)
+
+    }
+
+/*******************************************************************************
+
+                    MAIN METHODS
+    
+*******************************************************************************/
+
+    /**
+    * User id is for the user id who is flagging (not flagged)
+    */
+    this.flag = function(commentId, userId, callback){
+
+        // confirm user is allowed to flag
+
+        // confirm user has not yet flagged
+
+        // flag post
+
+        // determine if post should be deleted
+
+        // determine if user should be termporarily or permanently banned
 
     }
 

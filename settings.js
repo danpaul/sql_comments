@@ -7,8 +7,11 @@ module.exports = {
     //  be delted
     flagPercentageToBan: 0.1,
 
-    // if user flags more than this many posts over the past 10 minutes, 
+    // if user flags more than this many posts over the past `flagPeriod`, 
     //  they will be banned from flagging
-    maximumFlagRate: 40
+    maximumFlagRate: 40,
+
+    // period to check if user has flagged too many posts (in seconds)
+    flagPeriod: 600,
 
 }
