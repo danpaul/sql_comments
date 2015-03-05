@@ -3,6 +3,7 @@ var async = require('async')
 
 var models = require('./models/index')
 var defaultSettings = require('./settings')
+var schema = require('./schema')
 
 var DEFAULT_TABLE_PREFIX = 'sql_comment_'
 var DEAFULT_Z_SCORE = 1
@@ -29,16 +30,19 @@ module.exports = function(options, settings, callback){
     this.init = function(){
         self.knex = options.knex
 
+        // override default table prefix
         var prefix = DEFAULT_TABLE_PREFIX
         if( options.tablePrefix ){
             prefix = options.tablePrefix
         }
 
+        // override default z score
         var zScore = DEAFULT_Z_SCORE
         if( options.zScore ){
             zScore = options.zScore
         }
 
+        // override default settings
         if( settings ){
             self.settings = {}
             _.each(defaultSettings, function(v,k){
@@ -52,19 +56,19 @@ module.exports = function(options, settings, callback){
             self.settings = defaultSettings
         }
 
-        var commentTable = prefix + 'comment'
-        var voteTable = prefix + 'vote'
-        var flaggedUserLogTable = prefix + 'flaggedUserLog'
-        var userBanTable = prefix + 'userBan'
-        var userFlagBanTable = prefix + 'userFlagBan'
-        var userFlagLogTable = prefix + 'userFlagLog'
+        // get table names
+        var tableNames = {}
+        _.each(_.keys(schema.definition), function(k){
+            tableNames[k] = prefix + k
+        })
 
+        // init models
         commentModel = new models.comment({knex: options.knex,
-                                           tableName: commentTable,
-                                            zScore: zScore})
+                                           tableName: tableNames['comment'],
+                                           zScore: zScore})
 
         voteModel = new models.vote({knex: options.knex,
-                                    tableName: voteTable,
+                                    tableName: tableNames['userVote'],
                                     commentModel: commentModel})
 
         self.add = commentModel.add
@@ -74,15 +78,7 @@ module.exports = function(options, settings, callback){
 
         self.vote = voteModel.vote
 
-        // init tables
-        require('./schema')(commentTable,
-                            voteTable,
-                            flaggedUserLogTable,
-                            userBanTable,
-                            userFlagBanTable,
-                            userFlagLogTable,
-                            self.knex,
-                            callback)
+        schema.init(prefix, self.knex, callback)
 
     }
 

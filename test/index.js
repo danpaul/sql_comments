@@ -25,7 +25,9 @@ var dbCreds = {
 
 var knex = require('knex')(dbCreds)
 
-var TABLES = ['sql_comment_comment', 'sql_comment_vote']
+var TABLES = _.map(_.keys(require('../schema').definition), function(v){
+    return 'sql_comment_' + v
+})
 
 var settings = {
     numberOfTopComments: 10
@@ -65,6 +67,7 @@ var nestedComment2;
 async.waterfall([
 
     function(callback){
+
         sqlComment = new SqlComment({knex: knex},
                                     {minimumFlagsToBan: 1},
                                     callback)
@@ -74,6 +77,7 @@ async.waterfall([
 
     // add commeents
 	function(callback){
+
         async.eachSeries(_.range(settings.numberOfTopComments),
                          function(number, callbackB){
 

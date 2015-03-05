@@ -1,81 +1,81 @@
+var schema = {}
+
+var _ = require('underscore')
 var async = require('async')
 
-var commentSchema = function(table){
-    table.increments()
-    table.integer('post').default(0).index()
-    table.integer('parent').default(0).index()
-    table.integer('user').default(0).index()
-    table.integer('up_vote').default(0).index()
-    table.integer('down_vote').default(0).index()        
-    table.float('rank').default(0.0).index()
-    table.integer('flag_count').default(0)
-    table.boolean('is_deleted').default(false)
-    table.integer('created').default(0)
-    table.text('comment').default("")
+schema.definition = {
+
+    comment: function(table){
+        table.increments()
+        table.integer('post').default(0).index()
+        table.integer('parent').default(0).index()
+        table.integer('user').default(0).index()
+        table.integer('up_vote').default(0).index()
+        table.integer('down_vote').default(0).index()        
+        table.float('rank').default(0.0).index()
+        table.integer('flag_count').default(0)
+        table.boolean('is_deleted').default(false)
+        table.integer('created').default(0)
+        table.text('comment').default("")
+    },
+
+    userVote: function(table){
+        table.integer('user'),
+        table.integer('comment'),
+        table.boolean('up_vote').default(false)
+        table.primary(['user', 'comment'])
+    },
+
+    flaggedUserLog: function(table){
+        table.increments()
+        table.integer('user').default(0).index(),
+        table.integer('created').default(0).index(),
+        table.integer('comment').default(0)
+    },
+
+    userBan: function(table){
+        table.increments()
+        table.integer('user').default(0).index()
+        table.integer('created').default(0)
+        table.boolean('is_banned').default(true).index()
+        table.boolean('is_permanently_banned').default(false)
+    },
+
+    userFlagBan: function(table){
+        table.increments()
+        table.integer('user').default(0).index()
+        table.integer('created').default(0)
+        table.boolean('is_banned').default(true).index()
+        table.boolean('is_permanently_banned').default(false)   
+    },
+
+    userFlagLog: function(table){
+        table.integer('user')
+        table.integer('post')
+        table.integer('created').index()
+        table.primary(['user', 'post'])
+    }
+
 }
 
-var userVoteSchema = function(table){
-    table.integer('user'),
-    table.integer('comment'),
-    table.boolean('up_vote').default(false)
-    table.primary(['user', 'comment'])
-}
+schema.init = function(prefix,
+                       knex,
+                       callbackIn){
 
-var flaggedUserLogSchema = function(table){
-    table.increments()
-    table.integer('user').default(0).index(),
-    table.integer('created').default(0).index(),
-    table.integer('comment').default(0)
-}
+        var tableNames = _.keys(schema.definition)
 
-var userBanSchema = function(table){
-    table.increments()
-    table.integer('user').default(0).index()
-    table.integer('created').default(0)
-    table.boolean('is_banned').default(true).index()
-    table.boolean('is_permanently_banned').default(false)
-}
+        async.eachSeries(tableNames, function(tableName, callback){
 
-var userFlagBanSchema = function(table){
-    table.increments()
-    table.integer('user').default(0).index()
-    table.integer('created').default(0)
-    table.boolean('is_banned').default(true).index()
-    table.boolean('is_permanently_banned').default(false)   
-}
+            var fullTableName = prefix + tableName;
 
-var userFlagLogSchema = function(table){
-    table.integer('user')
-    table.integer('post')
-    table.integer('created').index()
-    table.primary(['user', 'post'])
-}
-
-module.exports = function(commentTableName,
-                          userVoteTableName,
-                          flaggedUserLogTableName,
-                          userBanTableName,
-                          userFlagBanTableName,
-                          userFlagLogTableName,
-                          knex,
-                          callbackIn){
-
-        var tableData = [
-            {tableName: commentTableName, schema: commentSchema},
-            {tableName: userVoteTableName, schema: userVoteSchema},
-            {tableName: flaggedUserLogTableName, schema: flaggedUserLogSchema},
-            {tableName: userBanTableName, schema: userBanSchema},
-            {tableName: userFlagBanTableName, schema: userFlagBanSchema},
-            {tableName: userFlagLogTableName, schema: userFlagLogSchema}
-        ]
-
-        async.eachSeries(tableData, function(tableInfo, callback){
-            knex.schema.hasTable(tableInfo.tableName)
+            knex.schema.hasTable(fullTableName)
                 .then(function(exists) {
+
                     if( !exists ){
+
                         // create the table
-                        knex.schema.createTable(tableInfo.tableName,
-                                                tableInfo.schema)
+                        knex.schema.createTable(fullTableName,
+                                                schema.definition[tableName])
 
                             .then(function(){ callback(); })
                             .catch(callback)
@@ -85,9 +85,12 @@ module.exports = function(commentTableName,
                 .catch(callback)            
         },
         function(err){
-            if(err){ 
-console.log(err)
-                callbackIn(err) }
-            else{ callbackIn() }
+            if(err){
+                callbackIn(err)
+            } else {
+                callbackIn()
+            }
         })
 }
+
+module.exports = schema
