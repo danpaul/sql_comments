@@ -1,3 +1,8 @@
+var tenMinutes = 60 * 10
+var oneWeek = 60 * 60 * 24 * 7
+var fourWeeks = oneWeek * 4
+
+
 module.exports = {
     
     // comment must be flagged at least this many times before it's deleted
@@ -12,6 +17,15 @@ module.exports = {
     maximumFlagRate: 40,
 
     // period to check if user has flagged too many posts (in seconds)
-    flagPeriod: 600,
+    flagPeriod: tenMinutes,
+
+    // period users get banned for if they flag too much
+    flagBanPeriod: oneWeek,
+
+    // if user is banned for flagging this many times in
+    //  `maxFlagBanPeriod`, they will be permanently banned from flagging
+    maxFlagBanRate: 3,
+
+    maxFlagBanPeriod: fourWeeks
 
 }

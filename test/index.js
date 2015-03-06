@@ -201,6 +201,7 @@ async.waterfall([
 
     // flag comment 3
     function(callback){
+        // callback()
         sqlComment.flag(topComments[2], userId, callback)
     }
 

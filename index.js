@@ -74,9 +74,12 @@ module.exports = function(options, settings, callback){
         self.userFlagBanModel =
              new models.userFlagBan({knex: options.knex,
                                     tableName: tableNames['userFlagBan'],
-                                    maximumFlagRate: settings.maximumFlagRate,
-                                    flagPeriod: settings.flagPeriod})
-
+                                    maximumFlagRate: self.settings.maximumFlagRate,
+                                    flagPeriod: self.settings.flagPeriod,
+                                    flagBanPeriod: self.settings.flagBanPeriod,
+                                    maxFlagBanRate: self.settings.maximumFlagRate,
+                                    maxFlagBanPeriod: self.settingsmaxFlagBanPeriod
+                                })
 
         self.add = self.commentModel.add
         self.delete = self.commentModel.delete
@@ -98,9 +101,24 @@ module.exports = function(options, settings, callback){
     /**
     * User id is for the user id who is flagging (not flagged)
     */
-    this.flag = function(commentId, userId, callback){
+    this.flag = function(commentId, userId, callbackIn){
+// callbackIn()
+        // confirm user has not been banned from excessive flagging
+        self.userFlagBanModel.isBanned(userId, function(err, isBanned){
+            callbackIn()
 
-        // confirm user is allowed to flag
+        })
+
+        // callback()
+
+        // async.waterfall([
+
+
+
+
+        // ], callback)
+
+        
 
         // confirm user has not yet flagged
 
