@@ -51,9 +51,9 @@ schema.definition = {
 
     userFlagLog: function(table){
         table.integer('user')
-        table.integer('post')
+        table.integer('comment')
         table.integer('created').index()
-        table.primary(['user', 'post'])
+        table.primary(['user', 'comment'])
     }
 
 }

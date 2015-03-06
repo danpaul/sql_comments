@@ -16,6 +16,7 @@ module.exports = function(options, callback){
     
 *******************************************************************************/
 
+    // see settings.js for flag setting documentation
     this.init = function(){
         self.knex = options.knex
         self.tableName = options.tableName
@@ -82,6 +83,10 @@ module.exports = function(options, callback){
             return true
         }
         return false
+    }
+
+    this.getFlagPeriod = function(){
+        return self.flagPeriod
     }
 
 

@@ -81,6 +81,12 @@ module.exports = function(options, settings, callback){
                                     maxFlagBanPeriod: self.settingsmaxFlagBanPeriod
                                 })
 
+        self.flaggedUserLog =
+            new models.flaggedUserLog({knex: options.knex,
+                                       tableName: tableNames['flaggedUserLog'],
+                                       maximumFlagRate: self.settings.maximumFlagRate,
+                                       flagPeriod: self.settings.flagPeriod})
+
         self.add = self.commentModel.add
         self.delete = self.commentModel.delete
         self.getComment = self.commentModel.getComment
@@ -102,10 +108,34 @@ module.exports = function(options, settings, callback){
     * User id is for the user id who is flagging (not flagged)
     */
     this.flag = function(commentId, userId, callbackIn){
-// callbackIn()
+
         // confirm user has not been banned from excessive flagging
         self.userFlagBanModel.isBanned(userId, function(err, isBanned){
-            callbackIn()
+
+            if( isBanned ){
+                callbackIn()
+                return
+            }
+
+            // log users flag
+            self.flaggedUserLog.log(userId,
+                                    commentId,
+                                    function(err, shouldContinue){
+
+                if( err ){
+                    callbackIn(err)
+                    return
+                }
+
+                if( !shouldContinue ){
+                    callbackIn()
+                    return
+                }
+
+            })
+
+
+            // callbackIn()
 
         })
 
