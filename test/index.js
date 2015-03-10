@@ -4,8 +4,6 @@
 
 *******************************************************************************/
 
-var config = require('./config')
-
 var _ = require('underscore')
 var assert = require('assert')
 var async = require('async')
@@ -77,10 +75,8 @@ async.waterfall([
 
     // add commeents
 	function(callback){
-
         async.eachSeries(_.range(settings.numberOfTopComments),
                          function(number, callbackB){
-
             sqlComment.add(userId, postId, 0, 'This is a comment', callbackB)
 
         }, callback)
@@ -201,8 +197,7 @@ async.waterfall([
 
     // flag comment 3
     function(callback){
-        // callback()
-        sqlComment.flag(topComments[2]['id'], userId, callback)
+        sqlComment.flagUser(userId, topComments[2]['id'], callback)
     }
 
 ],

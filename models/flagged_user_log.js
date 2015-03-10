@@ -2,87 +2,113 @@
 * Logs flags user makes on another user's posts
 */
 
+var flaggedUserLog = {}
+
 var _ = require('underscore')
 var async = require('async')
 
 var baseModel = require('./base')
 
-/**
-* options should include:
-*   knex (knex object, required)
-*   tableName (required)
-*/
-module.exports = function(options, callback){
-    var self = this
+var knex
+var tableName
+var flagPeriod
+var maximumFlagRate
 
 /*******************************************************************************
 
-                    CONSTRUCTOR
+                    INITIALIZER
     
 *******************************************************************************/
 
-    this.init = function(){
-        self.knex = options.knex
-        self.tableName = options.tableName
-        self.flagPeriod = options.flagPeriod
-        self.maximumFlagRate = options.maximumFlagRate
-    }
+flaggedUserLog.init = function(options){
 
-/*******************************************************************************
+    knex = options.knex
+    tableName = options.tableName
+    flagPeriod = options.flagPeriod
+    maximumFlagRate = options.maximumFlagRate
 
-                    MAIN FUNCTIONS
-    
-*******************************************************************************/
-
-// self.userFlagBanModel.log
-    /**
-    * Passes back `false` if user has already flagged comment or user has 
-    *   excessive number of flags, otherwise, passes back `false`
-    */
-    this.log = function(userId, commentId, callbackIn){
-
-        var flagPeriodStart = baseModel.getCurrentTimestamp() - self.flagPeriod
-// console.log(commentId)
-// return
-        self.knex(self.tableName)
-            .select(['comment'])
-            .where('user', userId)
-            .andWhere('created', '>', flagPeriodStart)
-            .then(function(flagRecords){
-
-                // check if user has already voted
-                var previousVote = _.findWhere(flagRecords,
-                                               {comment: commentId})
-                if( previousVote ){
-                    callbackIn(null, false)
-                    return
-                }
-
-                // check for excessive flags
-
-
-
-                // check if user has flagged
-console.log(flagRecords)
-            })
-            .catch(callbackIn)
-
-        // check if user has already flagged
-
-        // check if user has excessive flags
-
-            // if has, trigger flag ban
-
-        // log flag
-
-        // check if log will result in e
-    }
-
-/*******************************************************************************
-
-                    HELPER FUNCTIONS
-    
-*******************************************************************************/
-
-    this.init()
 }
+
+/*******************************************************************************
+
+                    MAIN FUNCTION
+    
+*******************************************************************************/
+
+/**
+* Logs user flag, passes back `false` if user has already flagged comment,
+*   else passes back `true`
+*/
+flaggedUserLog.log = function(userId, commentId, callbackIn){
+
+    // confirm user has not yet flagged comment
+    flaggedUserLog.hasFlagged(userId, commentId, function(err, hasFlagged){
+
+        if( err ){
+            callbackIn(err)
+            return
+        }
+
+        if( hasFlagged ){
+            callbackIn(null, false)
+            return
+        }
+
+        // log user flag
+        knex(tableName)
+            .insert({
+                user: userId,
+                comment: commentId,
+                created: baseModel.getCurrentTimestamp()
+            })
+            .then(function(){ callbackIn(null, true) })
+            .catch(callbackIn)
+    })
+}
+
+/**
+* Passes back `true` if user has already flagged comment, else `false`
+*/
+flaggedUserLog.hasFlagged = function(userId, commentId, callbackIn){
+
+    knex(tableName)
+        .where('user', userId)
+        .andWhere('comment', commentId)
+        .then(function(rows){
+            if( rows.length !== 0 ){
+                callbackIn(null, true)
+            } else {
+                callbackIn(null, false)
+            }
+        })
+        .catch(callbackIn)
+}
+
+/**
+* Passes back `true` if user should be banned, else `false`
+*/
+flaggedUserLog.shouldBanUser = function(userId, callbackIn){
+
+    var evaluationPeriodStart = baseModel.getCurrentTimestamp() - flagPeriod
+
+    // get a count of user flags from within the evaluation period
+    knex(tableName)
+        .where('user', userId)
+        .andWhere('created', '>', evaluationPeriodStart )
+        .count('*')
+        .then(function(countRecord){
+
+            if( countRecord.length !== 1 ||
+                typeof(countRecord[0]['count(*)']) === 'undefined' ){
+
+                callbackIn(new Error('Could not get flag count'))
+                return
+            }
+
+            callbackIn(null, (maximumFlagRate < countRecord[0]['count(*)']))
+        })
+        .catch(callbackIn)
+
+}
+
+module.exports = flaggedUserLog

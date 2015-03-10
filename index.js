@@ -71,21 +71,20 @@ module.exports = function(options, settings, callback){
                                          tableName: tableNames['userVote'],
                                          commentModel: self.commentModel})
 
-        self.userFlagBanModel =
-             new models.userFlagBan({knex: options.knex,
-                                    tableName: tableNames['userFlagBan'],
-                                    maximumFlagRate: self.settings.maximumFlagRate,
-                                    flagPeriod: self.settings.flagPeriod,
-                                    flagBanPeriod: self.settings.flagBanPeriod,
-                                    maxFlagBanRate: self.settings.maximumFlagRate,
-                                    maxFlagBanPeriod: self.settingsmaxFlagBanPeriod
-                                })
+        models.userFlagBan.init({
+            knex: options.knex,
+            tableName: tableNames['userFlagBan'],
+            maximumFlagRate: self.settings.maximumFlagRate,
+            flagPeriod: self.settings.flagPeriod,
+            flagBanPeriod: self.settings.flagBanPeriod,
+            maxFlagBanRate: self.settings.maximumFlagRate,
+            maxFlagBanPeriod: self.settings.maxFlagBanPeriod
+        })
 
-        self.flaggedUserLog =
-            new models.flaggedUserLog({knex: options.knex,
-                                       tableName: tableNames['flaggedUserLog'],
-                                       maximumFlagRate: self.settings.maximumFlagRate,
-                                       flagPeriod: self.settings.flagPeriod})
+        models.flaggedUserLog.init({knex: options.knex,
+                                    tableName: tableNames['flaggedUserLog'],
+                                    maximumFlagRate: self.settings.maximumFlagRate,
+                                    flagPeriod: self.settings.flagPeriod})
 
         self.add = self.commentModel.add
         self.delete = self.commentModel.delete
@@ -94,69 +93,9 @@ module.exports = function(options, settings, callback){
 
         self.vote = self.voteModel.vote
 
+        self.flagUser = models.flag.flagUser
+
         schema.init(prefix, self.knex, callback)
-
-    }
-
-/*******************************************************************************
-
-                    MAIN METHODS
-    
-*******************************************************************************/
-
-    /**
-    * User id is for the user id who is flagging (not flagged)
-    */
-    this.flag = function(commentId, userId, callbackIn){
-
-        // confirm user has not been banned from excessive flagging
-        self.userFlagBanModel.isBanned(userId, function(err, isBanned){
-
-            if( isBanned ){
-                callbackIn()
-                return
-            }
-
-            // log users flag
-            self.flaggedUserLog.log(userId,
-                                    commentId,
-                                    function(err, shouldContinue){
-
-                if( err ){
-                    callbackIn(err)
-                    return
-                }
-
-                if( !shouldContinue ){
-                    callbackIn()
-                    return
-                }
-
-            })
-
-
-            // callbackIn()
-
-        })
-
-        // callback()
-
-        // async.waterfall([
-
-
-
-
-        // ], callback)
-
-        
-
-        // confirm user has not yet flagged
-
-        // flag post
-
-        // determine if post should be deleted
-
-        // determine if user should be termporarily or permanently banned
 
     }
 

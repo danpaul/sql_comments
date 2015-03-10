@@ -1,3 +1,4 @@
+- test flagging functionality
 
 - get formatted comments
 

@@ -1,73 +1,154 @@
+var userFlagBan = {}
+
 var async = require('async')
 
 var baseModel = require('./base')
+var flaggedUserLog = require('./flagged_user_log')
 
-/**
-* options should include:
-*   knex (knex object, required)
-*   tableName
-*/
-module.exports = function(options, callback){
-    var self = this
+var knex
+var tableName
+var maximumFlagRate
+var flagPeriod
+var flagBanPeriod
+var maxFlagBanRate
+var maxFlagBanPeriod
+
 
 /*******************************************************************************
 
-                    CONSTRUCTOR
+                    INITIALIZER
     
 *******************************************************************************/
 
-    // see settings.js for flag setting documentation
-    this.init = function(){
-        self.knex = options.knex
-        self.tableName = options.tableName
-        self.maximumFlagRate = options.maximumFlagRate
-        self.flagPeriod = options.flagPeriod
-        self.flagBanPeriod = options.flagBanPeriod
-        self.maxFlagBanRate = options.maxFlagBanRate
-        self.maxFlagBanPeriod = options.maxFlagBanPeriod
-    }
+// see settings.js for flag setting documentation
+userFlagBan.init = function(options){
+    knex = options.knex
+    tableName = options.tableName
+    maximumFlagRate = options.maximumFlagRate
+    flagPeriod = options.flagPeriod
+    flagBanPeriod = options.flagBanPeriod
+    maxFlagBanRate = options.maxFlagBanRate
+    maxFlagBanPeriod = options.maxFlagBanPeriod
+}
 
 /*******************************************************************************
 
                     MAIN FUNCTIONS
     
 *******************************************************************************/
-    
-    this.isBanned = function(userId, callbackIn){
-        self.knex(self.tableName)
-            .select(['created', 'is_banned', 'is_permanently_banned'])
-            .where('user', userId)
-            .andWhere('is_banned', true)
-            .then(function(rows){
 
-                if( rows.length === 0 ){
-                    callbackIn(null, false)
-                    return
-                }
+userFlagBan.isBanned = function(userId, callbackIn){
+    knex(tableName)
+        .select(['created', 'is_banned', 'is_permanently_banned'])
+        .where('user', userId)
+        .andWhere('is_banned', true)
+        .then(function(rows){
 
-                var userBan = rows[0]
-                if( self.banHasExpired(userBan) ){
-                    this.liftUserBan(userId, function(err){
-                        if( err ){
-                            callbackIn(err)
-                        } else {
-                            callbackIn(null, false)
-                        }
-                    })
-                } else {
-                    callbackIn(null, true)
-                }
-            })
-            .catch(callbackIn)
-    }
+            if( rows.length === 0 ){
+                callbackIn(null, false)
+                return
+            }
 
-    this.liftUserBan = function(userId, callbackIn){
-        self.knex(self.tableName)
-            .where('user', userId)
-            .update({'is_banned': false})
-            .then(function(){callbackIn})
-            .catch(callbackIn)
-    }
+            var userBan = rows[0]
+            if( userFlagBan.banHasExpired(userBan) ){
+                this.liftUserBan(userId, function(err){
+                    if( err ){
+                        callbackIn(err)
+                    } else {
+                        callbackIn(null, false)
+                    }
+                })
+            } else {
+                callbackIn(null, true)
+            }
+        })
+        .catch(callbackIn)
+}
+
+userFlagBan.liftUserBan = function(userId, callbackIn){
+    knex(tableName)
+        .where('user', userId)
+        .update({'is_banned': false})
+        .then(function(){callbackIn})
+        .catch(callbackIn)
+}
+
+userFlagBan.liftUserBan = function(userId, callbackIn){
+    knex(tableName)
+        .where('user', userId)
+        .update({'is_banned': false})
+        .then(function(){callbackIn})
+        .catch(callbackIn)
+}
+
+/**
+* Determines if user has been banned an excessive amount of times
+* Passes back `true` if user should be permanently banned, else `false`
+*/
+userFlagBan.shouldPermanentlyBanUser = function(userId, callbackIn){
+
+    var evaluationPeriodStart = baseModel.getCurrentTimestamp() -
+                                maxFlagBanPeriod
+
+    // get a count of user flags from within the evaluation period
+    knex(tableName)
+        .where('user', userId)
+        .andWhere('created', '>', evaluationPeriodStart )
+        .count('*')
+        .then(function(countRecord){
+
+            if( countRecord.length !== 1 ||
+                typeof(countRecord[0]['count(*)']) === 'undefined' ){
+
+                callbackIn(new Error('Could not get flag count'))
+                return
+            }
+
+            callbackIn(null, (maxFlagBanRate < countRecord[0]['count(*)']))
+        })
+        .catch(callbackIn)
+
+}
+
+/**
+* Checks user log and bans/permanently bans user if excessively flagging
+*/
+userFlagBan.updateUserBan = function(userId, callbackIn){
+
+    // check log to see if user should be banned
+    flaggedUserLog.shouldBanUser(userId, function(err, shouldBan){
+
+        if( err ){
+            callbackIn(err)
+            return
+        }
+
+        if( !shouldBan ){
+            callbackIn()
+            return
+        }
+
+        // check if user should be permanently banned
+        userFlagBan.shouldPermanentlyBanUser(userId,
+                                             function(err, shouldPermBan){
+            var insertRecord = {
+                user: userId,
+                created: baseModel.getCurrentTimestamp(),
+                is_banned: true,
+                is_permanently_banned: false
+            }
+
+            if( shouldPermBan ){
+                insertRecord.is_permanently_banned = true
+            }
+
+            knex(tableName)
+                .insert(insertRecord)
+                .then(function(){ callbackIn() })
+                .catch(callbackIn)
+        })
+    })
+}
 
 /*******************************************************************************
 
@@ -75,21 +156,18 @@ module.exports = function(options, callback){
     
 *******************************************************************************/
 
-    this.banHasExpired = function(userBan){
-        if( userBan['is_permanently_banned'] ){ return false; }
-        if( (baseModel.getCurrentTimestamp() - self.flagBanPeriod) >
-            userBan.created ){
+userFlagBan.banHasExpired = function(userBan){
+    if( userBan['is_permanently_banned'] ){ return false; }
+    if( (baseModel.getCurrentTimestamp() - flagBanPeriod) >
+        userBan.created ){
 
-            return true
-        }
-        return false
+        return true
     }
-
-    this.getFlagPeriod = function(){
-        return self.flagPeriod
-    }
-
-
-
-    this.init()
+    return false
 }
+
+userFlagBan.getFlagPeriod = function(){
+    return flagPeriod
+}
+
+module.exports = userFlagBan
