@@ -198,6 +198,15 @@ async.waterfall([
     // flag comment 3
     function(callback){
         sqlComment.flagUser(userId, topComments[2]['id'], callback)
+    },
+
+    function(callback){
+        sqlComment.getFormattedComments(postId, true, function(err, comments){
+            if( err ){ callback(err) }
+            else{
+                console.log(comments)
+            }
+        })
     }
 
 ],

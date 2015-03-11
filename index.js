@@ -90,6 +90,7 @@ module.exports = function(options, settings, callback){
         self.delete = self.commentModel.delete
         self.getComment = self.commentModel.getComment
         self.getComments = self.commentModel.getComments
+        self.getFormattedComments = self.commentModel.getFormattedComments
 
         self.vote = self.voteModel.vote
 

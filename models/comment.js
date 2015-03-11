@@ -1,3 +1,4 @@
+var _ = require('underscore')
 var async = require('async')
 var decay = require('decay')
 
@@ -89,6 +90,45 @@ module.exports = function(options, callback){
 
         query.then(function(rows){ callbackIn(null, rows)})
             .catch(callbackIn)
+    }
+
+    /**
+    * Passes back an array of top level comment objects
+    */
+    this.getFormattedComments = function(postId,
+                                         includeDeleted,
+                                         callbackIn){
+
+        self.getComments(postId, includeDeleted, function(err, comments){
+
+            if( err ){
+                callbackIn(err)
+                return
+            }
+
+            var commentMap = {}
+
+            _.each(comments, function(comment){
+                commentMap[comment.id.toString()] = comment
+                comment.children = []
+            })
+
+            _.each(comments, function(comment){
+                if( comment.parent !== 0 ){
+                    commentMap[comment.parent].children.push(comment)
+                }
+            })
+
+            _.each(commentMap, function(v, k){
+                if( v.parent !== 0 ){
+                    delete( commentMap[k] )
+                }
+            })
+
+            callbackIn(null, commentMap)
+
+        })
+
     }
 
     /**
