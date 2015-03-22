@@ -1,3 +1,7 @@
+- track/ban IPs
+
+- add nesting depth
+
 - what happens with orphaned comments in formatted return?
 
 - sort returned comments by ranking

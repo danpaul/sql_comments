@@ -2,6 +2,11 @@ var tenMinutes = 60 * 10
 var oneWeek = 60 * 60 * 24 * 7
 var fourWeeks = oneWeek * 4
 
+/**
+These options can also get passed to the constructor
+    tablePrefix (defaults to "sql_comment_")
+    zScore (defaults to 1)
+*/
 
 module.exports = {
     
