@@ -1,3 +1,5 @@
+- limit amount of comments a user can make in a certain amout of time
+
 - track/ban IPs
 
 - add nesting depth

@@ -1,12 +1,12 @@
 ## About
 
-Sql Comment is an SQL backed ([Knex](http://knexjs.org/) compatible) comment service written in node. Sql Comment does not sanitize user input (so you shound handle that yourself). The basic functionality has been formally tested but tests still need to get written for some of the flagging functionality so I can't guarantee these features are entirely stable yet.
+Sql Comment is an SQL backed ([Knex](http://knexjs.org/) compatible) comment service written in node. Sql Comment does not sanitize user input (so you shound handle that yourself). The basic functionality has been tested but tests still need to get written for some of the flagging functionality so I can't guarantee these features are entirely stable yet.
 
 Sql Comment uses [Wilson Score](http://www.evanmiller.org/how-not-to-sort-by-average-rating.html) (Reddit's best comment scoring system) ranking system and uses a configurable flagging system.
 
 ## Settings
 
-There are a handful of flagging settings that affect how flagged comments are handled and how users who are flagged too often and users who flag comments too often are handled. If a user's comment is flagged above a certain threshold and is above a certain flag to up vote threshold, it will get deleted. If a user has too many flags in a certain period of time, they will be banned from commenting for a certain amount of time. If a user gets banned too many times, they will be permanently banned. Finally, if a user flags too many comments in a certain amount of time the will get banned from flagging for a period of time. If they get banned from flagging too many times, they will get permanently banned from flagging.
+There are a handful of flagging settings that affect how flagged comments are handled and how users who are flagged too often and users who flag comments too often are handled. If a user's comment is flagged above a certain threshold and is above a certain flag to up vote ratio, it will get deleted. If a user has too many flags in a certain period of time, they will be banned from commenting for a certain amount of time. If a user gets banned too many times, they will be permanently banned. Finally, if a user flags too many comments in a certain amount of time they will get banned from flagging for a period of time. If they get banned from flagging too many times, they will get permanently banned from flagging.
 
 Take a look at [settings]('./settings.js') to see the defaults for flagging and other settings. These can get overridden via the options parameter passed to the consctructor.
 
