@@ -37,6 +37,7 @@ userFlagBan.init = function(options){
     
 *******************************************************************************/
 
+// passes back `true` if user has been banned, else false
 userFlagBan.isBanned = function(userId, callbackIn){
     knex(tableName)
         .select(['created', 'is_banned', 'is_permanently_banned'])
@@ -51,7 +52,7 @@ userFlagBan.isBanned = function(userId, callbackIn){
 
             var userBan = rows[0]
             if( userFlagBan.banHasExpired(userBan) ){
-                this.liftUserBan(userId, function(err){
+                userFlagBan.liftUserBan(userId, function(err){
                     if( err ){
                         callbackIn(err)
                     } else {
@@ -65,19 +66,12 @@ userFlagBan.isBanned = function(userId, callbackIn){
         .catch(callbackIn)
 }
 
-userFlagBan.liftUserBan = function(userId, callbackIn){
-    knex(tableName)
-        .where('user', userId)
-        .update({'is_banned': false})
-        .then(function(){callbackIn})
-        .catch(callbackIn)
-}
 
 userFlagBan.liftUserBan = function(userId, callbackIn){
     knex(tableName)
         .where('user', userId)
         .update({'is_banned': false})
-        .then(function(){callbackIn})
+        .then(function(){ callbackIn() })
         .catch(callbackIn)
 }
 
@@ -104,7 +98,8 @@ userFlagBan.shouldPermanentlyBanUser = function(userId, callbackIn){
                 return
             }
 
-            callbackIn(null, (maxFlagBanRate < countRecord[0]['count(*)']))
+            callbackIn(null,
+                       (maxFlagBanRate <= (countRecord[0]['count(*)'] + 1)))
         })
         .catch(callbackIn)
 
@@ -157,9 +152,9 @@ userFlagBan.updateUserBan = function(userId, callbackIn){
 *******************************************************************************/
 
 userFlagBan.banHasExpired = function(userBan){
+// console.log(flagBanPeriod)
     if( userBan['is_permanently_banned'] ){ return false; }
-    if( (baseModel.getCurrentTimestamp() - flagBanPeriod) >
-        userBan.created ){
+    if( (baseModel.getCurrentTimestamp() - flagBanPeriod) > userBan.created ){
 
         return true
     }

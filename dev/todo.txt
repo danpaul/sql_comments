@@ -1,8 +1,10 @@
-- refractor main class
-
-- add IP logging
+- add tests for flag banning
 
 - limit amount of comments a user can make in a certain amout of time
+
+- refractor main class
+
+- add IP logging 
 
 - track/ban IPs
 

@@ -8,6 +8,9 @@ var _ = require('underscore')
 var assert = require('assert')
 var async = require('async')
 
+var settings = require('../settings')
+var models = require('../models/index')
+
 var SqlComment = require('../index')
 
 var dbCreds = {
@@ -27,9 +30,7 @@ var TABLES = _.map(_.keys(require('../schema').definition), function(v){
     return 'sql_comment_' + v
 })
 
-var settings = {
-    numberOfTopComments: 10
-}
+var numberOfTopComments = 10
 
 /*******************************************************************************
 
@@ -65,16 +66,14 @@ var nestedComment2;
 async.waterfall([
 
     function(callback){
-
-        sqlComment = new SqlComment({ knex: knex, minimumFlagsToBan: 1 },
-                                    callback )
+        sqlComment = new SqlComment({'knex': knex, maxFlagBanRate: 2}, callback )
     },
 
     clearTables,
 
     // add commeents
 	function(callback){
-        async.eachSeries(_.range(settings.numberOfTopComments),
+        async.eachSeries(_.range(numberOfTopComments),
                          function(number, callbackB){
             sqlComment.add(userId, postId, 0, 'This is a comment', callbackB)
 
@@ -88,7 +87,7 @@ async.waterfall([
 
     function(comments, callback){
         topComments = comments
-        assert((comments.length === settings.numberOfTopComments),
+        assert((comments.length === numberOfTopComments),
                'Incorrect number of comments created')
         assert((comments[0].comment === 'This is a comment'),
                'Comment content not correct')
@@ -108,7 +107,7 @@ async.waterfall([
 
     // confirm delete
     function(comments, callback){
-        assert((comments.length === settings.numberOfTopComments - 1),
+        assert((comments.length === numberOfTopComments - 1),
                'Incorrect number of comments after delete')
         callback()
     },
@@ -207,7 +206,116 @@ async.waterfall([
                 callback()
             }
         })
-    }
+    },
+
+    // create a bunch of new comments for post 222
+    function(callback){
+        async.eachSeries(_.range(settings.maximumFlagRate + 2),
+            function(number, callbackB){
+                sqlComment.add(number, 222, 0, 'This is a new comment', callbackB)
+        }, callback)
+    },
+
+    // get new comments
+    function(callback){
+        sqlComment.getComments(222, false, callback)
+    },
+
+    // get user 333 banned for flagging too much
+    function(comments, callback){
+        async.eachSeries(comments, function(comment, callbackB){
+            sqlComment.flagUser(333, comment['id'], callbackB)
+        }, callback)
+    },
+
+    // confirm user 333 is banned from flagging
+    function(callback){
+        models.userFlagBan.isBanned(333, callback)
+    },
+
+
+    function(userIsBanned, callback){
+        assert(userIsBanned, 'User 333 should be banned')
+        callback()
+    },
+
+    // reset user 333's ban time to before the flagBanPeriod
+    function(callback){
+
+        var preFlagBanPeriod = (Date.now() / 1000) - settings.flagBanPeriod - 60
+        preFlagBanPeriod = Math.floor(preFlagBanPeriod)
+
+        knex('sql_comment_userFlagBan')
+            .update({ created: preFlagBanPeriod })
+            // .update({ created: 0 })
+            .where('user', 333)
+            .then(function(){ callback() })
+            .catch(callback)
+    },
+
+    // confirm user is no longer banned
+    function(callback){
+        models.userFlagBan.isBanned(333, callback)
+    },
+
+    function(userIsBanned, callback){
+        assert(!userIsBanned, 'User 333 should no longer be banned')
+        callback()
+    },
+
+    // create a bunch of new comments for post 4444
+    function(callback){
+        async.eachSeries(_.range(settings.maximumFlagRate + 2),
+            function(number, callbackB){
+                sqlComment.add(number, 4444, 0, 'This is a new comment', callbackB)
+        }, callback)
+    },
+
+    // get new comments
+    function(callback){
+        sqlComment.getComments(4444, false, callback)
+    },
+
+    // get user 333 banned again
+    function(comments, callback){
+        async.eachSeries(comments, function(comment, callbackB){
+            sqlComment.flagUser(333, comment['id'], callbackB)
+        }, callback)
+    },
+
+    // confirm user 333 is banned from flagging, user should now be permanently
+    //  banned
+    function(callback){
+        models.userFlagBan.isBanned(333, callback)
+    },
+
+    function(userIsBanned, callback){
+        assert(userIsBanned, 'User 333 should be banned for second time')
+        callback()
+    },
+
+    // set bans to period where they would no longer be banned
+    function(callback){
+
+        var preFlagBanPeriod = (Date.now() / 1000) - settings.flagBanPeriod - 10
+
+        knex('sql_comment_userFlagBan')
+            .update({ created: preFlagBanPeriod })
+            // .where('user', 333)
+            .where('id', 2)
+            .then(function(){ callback() })
+            .catch(callback)
+    },
+
+    // confirm user 333 is permanently banned
+    function(callback){
+        models.userFlagBan.isBanned(333, callback)
+    },
+
+    function(userIsBanned, callback){
+        assert(userIsBanned, 'User 333 should be permanently banned')
+        callback()
+    },
 
 ],
 function(err){

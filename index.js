@@ -60,7 +60,7 @@ module.exports = function(options, callback){
             maximumFlagRate: self.settings.maximumFlagRate,
             flagPeriod: self.settings.flagPeriod,
             flagBanPeriod: self.settings.flagBanPeriod,
-            maxFlagBanRate: self.settings.maximumFlagRate,
+            maxFlagBanRate: self.settings.maxFlagBanRate,
             maxFlagBanPeriod: self.settings.maxFlagBanPeriod
         })
 

@@ -37,7 +37,6 @@ module.exports = {
     // if user is banned for flagging this many times in
     //  `maxFlagBanPeriod`, they will be permanently banned from flagging
     maxFlagBanRate: 3,
-
-    maxFlagBanPeriod: fourWeeks
+    maxFlagBanPeriod: fourWeeks,
 
 }
