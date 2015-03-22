@@ -40,10 +40,8 @@ async.waterfall([
 
     // initialize
     function(callback){
-
-        sqlComment = new SqlComment({knex: knex},
-                                    {minimumFlagsToBan: 1},
-                                    callback)
+        sqlComment = new SqlComment({ knex: knex, minimumFlagsToBan: 1 },
+                                    callback )
     },
 
     // add comments

@@ -15,7 +15,7 @@ var DEAFULT_Z_SCORE = 1
 *   zScore for Wilson score defaults to `DEFAULT_Z_SCORE`
 * see settings.js for default setting that can be overridden
 */
-module.exports = function(options, settings, callback){
+module.exports = function(options, callback){
     var self = this
 
     var commentModel
@@ -30,42 +30,25 @@ module.exports = function(options, settings, callback){
     this.init = function(){
         self.knex = options.knex
 
-        // override default table prefix
-        var prefix = DEFAULT_TABLE_PREFIX
-        if( options.tablePrefix ){
-            prefix = options.tablePrefix
-        }
-
-        // override default z score
-        var zScore = DEAFULT_Z_SCORE
-        if( options.zScore ){
-            zScore = options.zScore
-        }
-
-        // override default settings
-        if( settings ){
-            self.settings = {}
-            _.each(defaultSettings, function(v,k){
-                if( settings[k] ){
-                    self.settings[k] = settings[k]
-                } else {
-                    self.settings[k] = defaultSettings[k]
-                }                
-            })
-        } else {
-            self.settings = defaultSettings
-        }
+        self.settings = {}
+        _.each(defaultSettings, function(v,k){
+            if( typeof(options[k]) !== 'undefined' ){
+                self.settings[k] = options[k]
+            } else {
+                self.settings[k] = defaultSettings[k]
+            }                
+        })
 
         // get table names
         var tableNames = {}
         _.each(_.keys(schema.definition), function(k){
-            tableNames[k] = prefix + k
+            tableNames[k] = self.settings.tablePrefix + k
         })
 
         // init models
         self.commentModel = new models.comment({knex: options.knex,
                                                 tableName: tableNames['comment'],
-                                                zScore: zScore})
+                                                zScore: self.settings.zScore})
 
         self.voteModel = new models.vote({knex: options.knex,
                                          tableName: tableNames['userVote'],
@@ -96,7 +79,7 @@ module.exports = function(options, settings, callback){
 
         self.flagUser = models.flag.flagUser
 
-        schema.init(prefix, self.knex, callback)
+        schema.init(self.settings.tablePrefix, self.knex, callback)
 
     }
 

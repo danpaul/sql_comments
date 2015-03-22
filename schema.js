@@ -11,7 +11,7 @@ schema.definition = {
         table.integer('parent').default(0).index()
         table.integer('user').default(0).index()
         table.integer('up_vote').default(0).index()
-        table.integer('down_vote').default(0).index()        
+        table.integer('down_vote').default(0).index()
         table.float('rank').default(0.0).index()
         table.integer('flag_count').default(0)
         table.boolean('is_deleted').default(false)

@@ -66,9 +66,8 @@ async.waterfall([
 
     function(callback){
 
-        sqlComment = new SqlComment({knex: knex},
-                                    {minimumFlagsToBan: 1},
-                                    callback)
+        sqlComment = new SqlComment({ knex: knex, minimumFlagsToBan: 1 },
+                                    callback )
     },
 
     clearTables,
@@ -200,11 +199,12 @@ async.waterfall([
         sqlComment.flagUser(userId, topComments[2]['id'], callback)
     },
 
-    function(callback){
+    function(userIsBanned, callback){
         sqlComment.getFormattedComments(postId, true, function(err, comments){
             if( err ){ callback(err) }
             else{
-                console.log(comments)
+                // todo: write test
+                callback()
             }
         })
     }

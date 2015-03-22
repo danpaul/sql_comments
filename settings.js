@@ -3,12 +3,19 @@ var oneWeek = 60 * 60 * 24 * 7
 var fourWeeks = oneWeek * 4
 
 /**
-These options can also get passed to the constructor
-    tablePrefix (defaults to "sql_comment_")
-    zScore (defaults to 1)
+    To override settings, pass to constructor in options object
 */
 
 module.exports = {
+
+    // initialized Knex object is required
+    knex: null,
+
+    // default prefix added to all Sql Comment tables
+    tablePrefix: 'sql_comment_',
+
+    // used for Wilson Score ranking
+    zScore: 1,
     
     // comment must be flagged at least this many times before it's deleted
     minimumFlagsToBan: 3,

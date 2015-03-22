@@ -1,3 +1,7 @@
+- refractor main class
+
+- add IP logging
+
 - limit amount of comments a user can make in a certain amout of time
 
 - track/ban IPs
@@ -18,3 +22,7 @@
     + user id
     + comment id
     + flagged
+
+- do i need all the indexes in schema?
+
+- support table based sharding?
