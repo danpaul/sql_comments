@@ -102,7 +102,6 @@ userFlagBan.shouldPermanentlyBanUser = function(userId, callbackIn){
                        (maxFlagBanRate <= (countRecord[0]['count(*)'] + 1)))
         })
         .catch(callbackIn)
-
 }
 
 /**
