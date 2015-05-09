@@ -121,16 +121,13 @@ module.exports = function(options, callback){
                 }
             })
 
-            _.each(commentMap, function(v, k){
-                if( v.parent !== 0 ){
-                    delete( commentMap[k] )
-                } else {
+            _.each(commentMap, function(v, k){                
+                if( v.parent === 0 ){
                     topLevelComments.push(commentMap[k]);
                 }
             })
 
             callbackIn(null, topLevelComments);
-
         })
 
     }
