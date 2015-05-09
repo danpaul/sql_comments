@@ -83,6 +83,7 @@ module.exports = function(options, callback){
 
         var query = self.knex(self.tableName)
             .where({ post: postId })
+            .orderBy('rank', 'desc')
 
         if( !includeDeleted ){
             query.andWhere({is_deleted: false})
@@ -107,6 +108,7 @@ module.exports = function(options, callback){
             }
 
             var commentMap = {}
+            var topLevelComments = [];
 
             _.each(comments, function(comment){
                 commentMap[comment.id.toString()] = comment
@@ -122,10 +124,12 @@ module.exports = function(options, callback){
             _.each(commentMap, function(v, k){
                 if( v.parent !== 0 ){
                     delete( commentMap[k] )
+                } else {
+                    topLevelComments.push(commentMap[k]);
                 }
             })
 
-            callbackIn(null, commentMap)
+            callbackIn(null, topLevelComments);
 
         })
 
