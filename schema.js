@@ -11,7 +11,6 @@ schema.definition = {
         table.integer('parent').default(0).index()
         table.integer('user').default(0).index()
         table.float('rank').default(0.0).index()
-        // table.string('ip').default('').index()
         table.integer('up_vote').default(0)
         table.integer('down_vote').default(0)
         table.integer('flag_count').default(0)
@@ -59,9 +58,30 @@ schema.definition = {
 
 }
 
+var useStringId = function(){
+    schema.definition.comment = function(table){
+        table.increments()
+        table.string('post').default('').index()
+        table.integer('parent').default(0).index()
+        table.integer('user').default(0).index()
+        table.float('rank').default(0.0).index()
+        table.integer('up_vote').default(0)
+        table.integer('down_vote').default(0)
+        table.integer('flag_count').default(0)
+        table.boolean('is_deleted').default(false)
+        table.integer('created').default(0)
+        table.text('comment').default("")
+    }
+}
+
 schema.init = function(prefix,
                        knex,
+                       options,
                        callbackIn){
+
+        if( options && options.useStringPostId ){
+            useStringId();
+        }
 
         var tableNames = _.keys(schema.definition)
 
@@ -94,4 +114,4 @@ schema.init = function(prefix,
         })
 }
 
-module.exports = schema
+module.exports = schema;

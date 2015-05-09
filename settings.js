@@ -3,13 +3,16 @@ var oneWeek = 60 * 60 * 24 * 7
 var fourWeeks = oneWeek * 4
 
 /**
-    To override settings, pass to constructor in options object
+*    To override settings, pass to constructor in options object
 */
-
 module.exports = {
 
     // initialized Knex object is required
     knex: null,
+
+    // set to true if post (thing commens are getting attached to) id is a 
+    //  string instead of an int
+    useStringPostId: false,
 
     // default prefix added to all Sql Comment tables
     tablePrefix: 'sql_comment_',

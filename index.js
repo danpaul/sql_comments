@@ -28,6 +28,8 @@ module.exports = function(options, callback){
 *******************************************************************************/
 
     this.init = function(){
+
+        if( !options.knex ){ throw 'sql_comments requires knex objection'; }
         self.knex = options.knex
 
         self.settings = {}
@@ -79,7 +81,10 @@ module.exports = function(options, callback){
 
         self.flagUser = models.flag.flagUser
 
-        schema.init(self.settings.tablePrefix, self.knex, callback)
+        schema.init(self.settings.tablePrefix,
+                    self.knex,
+                    self.settings,
+                    callback);
 
     }
 
