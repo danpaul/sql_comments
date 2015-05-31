@@ -72,6 +72,7 @@ module.exports = function(options, callback){
                                     flagPeriod: self.settings.flagPeriod})
 
         self.add = self.commentModel.add
+        self.addForUser = self.commentModel.addForUser
         self.delete = self.commentModel.delete
         self.getComment = self.commentModel.getComment
         self.getComments = self.commentModel.getComments
