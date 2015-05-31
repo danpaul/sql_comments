@@ -14,6 +14,9 @@ module.exports = {
     //  string instead of an int
     useStringPostId: false,
 
+    // if true, a username will be required with each comment
+    useUsername: false,
+
     // default prefix added to all Sql Comment tables
     tablePrefix: 'sql_comment_',
 

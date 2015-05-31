@@ -49,6 +49,29 @@ module.exports = function(options, callback){
     }
 
     /**
+    * Same as this.add except includes another argument for username
+    */
+    this.addForUser = function(userId,
+                               username,
+                               postId,
+                               parentId,
+                               comment,
+                               callbackIn){
+
+        self.knex(self.tableName)
+            .insert({
+                user: userId,
+                username: username,
+                post: postId,
+                parent: parentId,
+                comment: comment,
+                created: baseModel.getCurrentTimestamp()
+            })
+            .then(function(){callbackIn()})
+            .catch(callbackIn)
+    }
+
+    /**
     * Sets `is_deleted` to `true` for comment
     */
     this.delete = function(commenId, callbackIn){
@@ -60,7 +83,7 @@ module.exports = function(options, callback){
     }
 
     /**
-    * Gets all details of individual commaent
+    * Gets all details of individual comment
     * Passes back `null` if comment is not found
     */
     this.getComment = function(commentId, callbackIn){
